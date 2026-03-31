@@ -1,21 +1,26 @@
 import streamlit as st
 import anthropic
-import streamlit.components.v1 as components
+
+
+from streamlit.components.v1 import html
 
 def add_google_analytics(measurement_id):
-    components.html(
+    html(
         f"""
-        <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-RP1HCVGB5E"></script>
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){{dataLayer.push(arguments);}}
           gtag('js', new Date());
-          gtag('config', 'G-RP1HCVGB5E');
+          gtag('config', 'G-RP1HCVGB5E', {{
+              'send_page_view': true
+          }});
         </script>
         """,
-        height=0
+        height=0,
+        scrolling=False
     )
+
 add_google_analytics("G-RP1HCVGB5E")
 
 
