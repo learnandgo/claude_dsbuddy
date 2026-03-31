@@ -1,5 +1,23 @@
 import streamlit as st
 import anthropic
+import streamlit.components.v1 as components
+
+def add_google_analytics(measurement_id):
+    components.html(
+        f"""
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id={measurement_id}"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){{dataLayer.push(arguments);}}
+          gtag('js', new Date());
+          gtag('config', '{measurement_id}');
+        </script>
+        """,
+        height=0
+    )
+
+add_google_analytics("G-RP1HCVGB5E")
 
 st.title("Data Science Buddy - Interview Prep")
 st.caption("Practice for Data Science, Analytics & Engineering interviews")
