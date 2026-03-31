@@ -13,8 +13,9 @@ and data engineering roles. Help candidates practice interviews by:
 - Explaining concepts clearly when asked
 - Adjusting difficulty based on the candidate's level"""
 
+
 model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
+    model_name="gemini-2.0-flash",
     system_instruction=SYSTEM_PROMPT
 )
 
