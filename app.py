@@ -27,7 +27,7 @@ if prompt := st.chat_input("Ask a question or say 'give me an interview question
 
     with st.chat_message("assistant"):
         response = client.messages.create(
-            model="claude-opus-4-6",
+            model="claude-haiku-4-5-20251001",
             max_tokens=1024,
             system=SYSTEM_PROMPT,
             messages=st.session_state.messages
