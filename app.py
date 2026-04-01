@@ -12,8 +12,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# ── Logo base64 ───────────────────────────────────────────────────────────────
-LOGO_B64 = "/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/wAARCAMABYADASIAAhEBAxEB/8QAHQABAAICAwEBAAAAAAAAAAAAAAEIAgcDBQYECf/EAF4QAAIBAwICBQUHCxEECwACAwABAgMEBQYRByEIEjFBURMiYXGBFDKRobGysxU3QlJicnN1gpKiFhcYIyczQ1ZjdJSVwcLR0tM1RlPwJCUmNDZEVFVkZZOE4UWDw"
 
 # ── Question bank ─────────────────────────────────────────────────────────────
 QUESTION_BANK = {
@@ -448,41 +446,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ── Login / logout buttons ─────────────────────────────────────────────────────
-lcol1, lcol2, lcol3 = st.columns([8, 1, 1])
-with lcol2:
-    if not st.session_state.logged_in:
-        if st.button("Log in", use_container_width=True):
-            st.session_state.show_login = not st.session_state.show_login
-            st.rerun()
-with lcol3:
-    if st.session_state.logged_in:
-        if st.button("Log out", use_container_width=True):
-            st.session_state.logged_in = False
-            st.session_state.username = ""
-            st.rerun()
-
-# ── Login form ────────────────────────────────────────────────────────────────
-if st.session_state.show_login and not st.session_state.logged_in:
-    with st.container():
-        st.markdown('<div class="login-modal">', unsafe_allow_html=True)
-        st.markdown("### Sign in to DS Buddy")
-        st.caption("Login saves your session progress. You can also continue as a guest.")
-        lc1, lc2 = st.columns([3, 3])
-        with lc1:
-            login_name = st.text_input("Name or username", placeholder="e.g. sreena", key="login_name_input")
-        with lc2:
-            st.markdown("<div style='margin-top:1.75rem'></div>", unsafe_allow_html=True)
-            if st.button("Continue →", use_container_width=True):
-                if login_name.strip():
-                    st.session_state.logged_in = True
-                    st.session_state.username = login_name.strip()
-                    st.session_state.show_login = False
-                    st.rerun()
-        if st.button("Continue as guest", use_container_width=False):
-            st.session_state.show_login = False
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
 
 # ── Controls row ──────────────────────────────────────────────────────────────
 c1, c2, c3 = st.columns([4, 4, 1.5])
@@ -603,7 +566,7 @@ with chart_col:
     center_label = str(total_done) if total_done > 0 else "0"
 
     chart_svg = f"""
-    <svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+    <svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
         {''.join(svg_parts)}
         <text x="80" y="76" text-anchor="middle" font-size="22" font-weight="600" fill="#0f172a" font-family="DM Mono,monospace">{center_label}</text>
         <text x="80" y="94" text-anchor="middle" font-size="10" fill="#94a3b8" font-family="DM Sans,sans-serif">QUESTIONS</text>
