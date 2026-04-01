@@ -24,7 +24,7 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
     padding-bottom: 2rem !important;
     padding-left: 2rem !important;
     padding-right: 2rem !important;
-    max-width: 1000px !important; /* reduce this to ~900 for narrower layout */
+    max-width: 1500px !important; /* increased by 50% from 1000px */
     margin-left: auto !important;
     margin-right: auto !important;
 }
