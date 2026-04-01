@@ -18,13 +18,15 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
 
 #MainMenu, footer, header { visibility: hidden; }
 
-/* Full width layout */
+/* Constrained centered layout */
 .block-container {
     padding-top: 1.5rem !important;
     padding-bottom: 2rem !important;
     padding-left: 2rem !important;
     padding-right: 2rem !important;
-    max-width: 100% !important;
+    max-width: 1000px !important; /* reduce this to ~900 for narrower layout */
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
 
 /* ── Header ── */
