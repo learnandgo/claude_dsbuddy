@@ -506,8 +506,8 @@ with donut_col:
         {donut_ring(40, 40, 31, beg, max(total_done,1), "#6366f1", 6)}
         {donut_ring(40, 40, 22, mid, max(total_done,1), "#22c55e", 5)}
         {donut_ring(40, 40, 13, sen, max(total_done,1), "#f59e0b", 4)}
-        <text x="40" y="37" text-anchor="middle" font-size="12" font-weight="600" fill="#0f172a" font-family="DM Mono,monospace">{total_done}</text>
-        <text x="40" y="47" text-anchor="middle" font-size="5" fill="#94a3b8" font-family="DM Sans,sans-serif">ANSWERED</text>
+        <text x="40" y="36" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a" font-family="DM Mono,monospace">{total_done}</text>
+        <text x="40" y="47" text-anchor="middle" font-size="7" fill="#94a3b8" font-family="DM Sans,sans-serif">ANSWERED</text>
     </svg>"""
 
     st.markdown(f"""
@@ -561,7 +561,7 @@ WHAT WAS MISSING:
 MODEL ANSWER:
 answer here"""
     if mode == "session":
-        mode_instr = "Structured 5-question interview. Ask given question, wait for answer, then give feedback using EXACTLY:\n" + fb
+        mode_instr = "You are running a 5-question interview session. Questions are asked one by one. Ask the given question, wait for the answer, give structured feedback, then the next question follows. Use EXACTLY this feedback format:\n" + fb
     else:
         mode_instr = "Free chat. When asked for question, ask one and wait. When user answers, give feedback using EXACTLY:\n" + fb
     return "You are DS Buddy, a professional interview coach.\nTopic: " + topic + " | Difficulty: " + diff + " — " + diff_guide + "\n" + mode_instr + "\nTone: professional, specific, encouraging."
@@ -704,7 +704,7 @@ def send_message(text, mode="free"):
                             next_num = done + 1
                             st.session_state.messages.append({
                                 "role": "user",
-                                "content": f"[SYSTEM: Now ask Question {next_num} of 5: \"{next_q}\". Just ask the question, do not give feedback again.]"
+                                "content": f"[SYSTEM: Question {next_num} of 5: \"{next_q}\"]"
                             })
                             with st.spinner("Getting next question..."):
                                 r2 = client.messages.create(
@@ -746,9 +746,7 @@ elif q2:
     st.session_state.score_count = 0
     q1_text = questions[0]
     send_message(
-        f"You are running a 5-question interview session (Question 1 of 5).\n"
-        f"Ask ONLY this question now, then wait for the answer:\n\n\"{q1_text}\"\n\n"
-        f"Do NOT list other questions. Just ask this one and wait.",
+        f"5-question session started (Question 1 of 5). Ask this question: \"{q1_text}\"",
         "session"
     )
 elif q3:
