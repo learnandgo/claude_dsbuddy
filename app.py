@@ -473,7 +473,18 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
 .fb-dot-good { color:#16a34a; font-size:1rem; margin-top:2px; flex-shrink:0; }
 .fb-dot-miss { color:#ea580c; font-size:1rem; margin-top:2px; flex-shrink:0; }
 .fb-point-text { line-height:1.55; }
-.fb-model-text { font-size:.87rem; line-height:1.75; color:#0c4a6e; }
+.fb-model-text { font-size:.88rem; line-height:1.8; color:#0c4a6e; }
+.fb-model-section { margin-top:.6rem; margin-bottom:.2rem; }
+.fb-model-step { display:flex; gap:10px; align-items:flex-start; margin:7px 0; }
+.fb-model-step-num { background:#0ea5e9; color:#fff; border-radius:50%; width:20px; height:20px; font-size:.72rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+.fb-model-step-text { font-size:.87rem; line-height:1.6; color:#0c4a6e; }
+.fb-model-bullet { display:flex; gap:8px; align-items:flex-start; margin:5px 0; }
+.fb-model-dot { color:#0ea5e9; font-size:.85rem; margin-top:3px; flex-shrink:0; }
+.fb-model-bullet-text { font-size:.87rem; line-height:1.6; color:#0c4a6e; }
+.fb-model-heading { font-size:.78rem; font-weight:700; color:#075985; text-transform:uppercase; letter-spacing:.06em; margin:10px 0 4px 0; border-bottom:1px solid #bae6fd; padding-bottom:3px; }
+.fb-model-code { background:#0f172a; color:#7dd3fc; font-family:"DM Mono",monospace; font-size:.78rem; border-radius:8px; padding:.5rem .75rem; margin:6px 0; display:block; white-space:pre-wrap; }
+.fb-model-keyterm { background:#e0f2fe; color:#0369a1; border-radius:4px; padding:1px 5px; font-weight:600; font-size:.84rem; }
+.fb-block.model { background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%) !important; border-color:#0ea5e9 !important; border-left-width:5px !important; }
 div.stButton > button { border-radius:10px; font-family:'DM Sans',sans-serif; font-weight:500; font-size:.86rem; padding:.48rem 1.1rem; transition:all .15s; width:100%; }
 div.stButton > button:first-child { background:#4f46e5; color:#fff; border:none; }
 div.stButton > button:first-child:hover { background:#4338ca; }
@@ -662,13 +673,35 @@ def grade_label(score):
     if score <= 9: return "Strong 💪", "#22c55e"
     return "Excellent 🌟", "#16a34a"
 
+def render_model_line(s, step_counter):
+    """Render a single line inside the MODEL ANSWER block with rich formatting."""
+    # Numbered step: "1." or "1)" at start
+    num_match = re.match(r'^(\d+)[.)\s]\s*(.+)$', s)
+    if num_match:
+        n, text = num_match.group(1), num_match.group(2)
+        return f'<div class="fb-model-step"><div class="fb-model-step-num">{n}</div><div class="fb-model-step-text">{text}</div></div>', step_counter
+    # Bullet point
+    if s.startswith("- ") or s.startswith("• "):
+        text = s[2:]
+        return f'<div class="fb-model-bullet"><span class="fb-model-dot">◆</span><span class="fb-model-bullet-text">{text}</span></div>', step_counter
+    # Sub-heading: line ending with ":" and short (acts as section label inside model answer)
+    if s.endswith(":") and len(s) < 60 and not s.startswith("http"):
+        return f'<div class="fb-model-heading">{s[:-1]}</div>', step_counter
+    # Bold key terms: **text**
+    s_rendered = re.sub(r'\*\*(.+?)\*\*', r'<span class="fb-model-keyterm">\1</span>', s)
+    # Code snippets: `code`
+    s_rendered = re.sub(r'`([^`]+)`', r'<span class="fb-model-code">\1</span>', s_rendered)
+    return f'<div class="fb-model-text">{s_rendered}</div>', step_counter
+
+
 def format_response(text):
     lines = text.split("\n")
     html = ""
     cur = None
+    step_counter = [0]
     smap = {"SCORE:":"score","WHAT YOU GOT RIGHT:":"good","WHAT WAS MISSING:":"missing","MODEL ANSWER:":"model"}
     icons = {"score":"🎯","good":"✅","missing":"🔶","model":"💡"}
-    lbls = {"score":"Score","good":"What you got right","missing":"What was missing","model":"Model answer"}
+    lbls = {"score":"Score","good":"What you got right","missing":"What was missing","model":"Model Answer"}
 
     def close():
         return "</div></div>" if cur else ""
@@ -680,11 +713,11 @@ def format_response(text):
             if s.upper().startswith(key):
                 html += close()
                 cur = bt
+                step_counter[0] = 0
                 inline = s[len(key):].strip()
                 if bt == "score":
                     raw = inline if inline else "?"
                     try:
-                        # Extract just the first number (e.g. "8.5" from "8.5/10" or "8.5")
                         m = re.search(r'(\d+(?:\.\d+)?)', raw)
                         sn_float = float(m.group(1)) if m else 0
                         sn = int(sn_float)
@@ -706,22 +739,36 @@ def format_response(text):
                 else:
                     html += f'<div class="fb-block {bt}"><div class="fb-header {bt}">{icons[bt]} {lbls[bt]}</div><div>'
                     if inline:
-                        dot = "fb-dot-good" if bt=="good" else "fb-dot-miss" if bt=="missing" else ""
-                        if bt == "model": html += f'<span class="fb-model-text">{inline}</span>'
-                        elif dot: html += f'<div class="fb-point"><span class="{dot}">●</span><span class="fb-point-text">{inline}</span></div>'
+                        if bt == "good":
+                            html += f'<div class="fb-point"><span class="fb-dot-good">●</span><span class="fb-point-text">{inline}</span></div>'
+                        elif bt == "missing":
+                            html += f'<div class="fb-point"><span class="fb-dot-miss">●</span><span class="fb-point-text">{inline}</span></div>'
+                        elif bt == "model":
+                            rendered, step_counter[0] = render_model_line(inline, step_counter[0])
+                            html += rendered
                 matched = True
                 break
         if not matched:
-            if s.startswith("- ") or s.startswith("• "):
-                c2 = s[2:]
-                if cur == "good": html += f'<div class="fb-point"><span class="fb-dot-good">●</span><span class="fb-point-text">{c2}</span></div>'
-                elif cur == "missing": html += f'<div class="fb-point"><span class="fb-dot-miss">●</span><span class="fb-point-text">{c2}</span></div>'
-                elif cur == "model": html += f'<span class="fb-model-text">• {c2}<br></span>'
-                else: html += f'<span style="display:block;margin:3px 0 3px 10px">• {c2}</span>'
-            elif s == "": html += "<br>"
+            if s == "":
+                if cur == "model":
+                    html += '<div style="height:6px"></div>'
+                else:
+                    html += "<br>"
+            elif cur == "good":
+                if s.startswith("- ") or s.startswith("• "):
+                    html += f'<div class="fb-point"><span class="fb-dot-good">●</span><span class="fb-point-text">{s[2:]}</span></div>'
+                else:
+                    html += f'<div class="fb-point"><span class="fb-dot-good">●</span><span class="fb-point-text">{s}</span></div>'
+            elif cur == "missing":
+                if s.startswith("- ") or s.startswith("• "):
+                    html += f'<div class="fb-point"><span class="fb-dot-miss">●</span><span class="fb-point-text">{s[2:]}</span></div>'
+                else:
+                    html += f'<div class="fb-point"><span class="fb-dot-miss">●</span><span class="fb-point-text">{s}</span></div>'
+            elif cur == "model":
+                rendered, step_counter[0] = render_model_line(s, step_counter[0])
+                html += rendered
             else:
-                if cur == "model": html += f'<span class="fb-model-text">{s}<br></span>'
-                else: html += f'<span style="display:block;margin:2px 0">{s}</span>'
+                html += f'<span style="display:block;margin:2px 0">{s}</span>'
     html += close()
     return html
 
