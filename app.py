@@ -362,6 +362,7 @@ defaults = {
     "session_results": [],
     "input_key": 0,
     "diff_counts": {"Beginner": 0, "Intermediate": 0, "Senior": 0},
+    "session_questions": [],
     "used_questions": [],
 }
 for k, v in defaults.items():
@@ -501,12 +502,12 @@ with donut_col:
         a = arc(cx, cy, r, 0, deg, color, sw) if deg > 0 else ""
         return bg + a
 
-    svg = f"""<svg width="130" height="130" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">
-        {donut_ring(65, 65, 52, beg, max(total_done,1), "#6366f1", 10)}
-        {donut_ring(65, 65, 37, mid, max(total_done,1), "#22c55e", 8)}
-        {donut_ring(65, 65, 22, sen, max(total_done,1), "#f59e0b", 7)}
-        <text x="65" y="61" text-anchor="middle" font-size="18" font-weight="600" fill="#0f172a" font-family="DM Mono,monospace">{total_done}</text>
-        <text x="65" y="74" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="DM Sans,sans-serif">ANSWERED</text>
+    svg = f"""<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        {donut_ring(40, 40, 31, beg, max(total_done,1), "#6366f1", 6)}
+        {donut_ring(40, 40, 22, mid, max(total_done,1), "#22c55e", 5)}
+        {donut_ring(40, 40, 13, sen, max(total_done,1), "#f59e0b", 4)}
+        <text x="40" y="37" text-anchor="middle" font-size="12" font-weight="600" fill="#0f172a" font-family="DM Mono,monospace">{total_done}</text>
+        <text x="40" y="47" text-anchor="middle" font-size="5" fill="#94a3b8" font-family="DM Sans,sans-serif">ANSWERED</text>
     </svg>"""
 
     st.markdown(f"""
@@ -593,17 +594,21 @@ def format_response(text):
                 cur = bt
                 inline = s[len(key):].strip()
                 if bt == "score":
-                    sv = inline if inline else "?"
+                    raw = inline if inline else "?"
                     try:
-                        sn = int(re.search(r'\d+', sv).group())
-                        bw = sn * 10
-                        bc = "#22c55e" if sn>=7 else "#f59e0b" if sn>=5 else "#ef4444"
+                        # Extract just the first number (e.g. "8.5" from "8.5/10" or "8.5")
+                        m = re.search(r'(\d+(?:\.\d+)?)', raw)
+                        sn_float = float(m.group(1)) if m else 0
+                        sn = int(sn_float)
+                        score_display_val = m.group(1) if m else "?"
+                        bw = min(int(sn_float * 10), 100)
+                        bc = "#22c55e" if sn_float>=7 else "#f59e0b" if sn_float>=5 else "#ef4444"
                         gl, gc = grade_label(sn)
                     except:
-                        bw, bc, gl, gc = 0, "#94a3b8", "", "#94a3b8"
+                        score_display_val, bw, bc, gl, gc = "?", 0, "#94a3b8", "", "#94a3b8"
                     html += f'''<div class="fb-block score">
 <div class="fb-header score">{icons["score"]} {lbls["score"]}</div>
-<div class="fb-score-value">{sv}/10</div>
+<div class="fb-score-value">{score_display_val}/10</div>
 <div class="fb-score-grade" style="color:{gc}">{gl}</div>
 <div class="score-bar-bg"><div class="score-bar-fill" style="width:{bw}%;background:{bc}"></div></div>
 <div>'''
@@ -676,17 +681,42 @@ def send_message(text, mode="free"):
     st.session_state.total_interactions += 1
     st.session_state.input_key += 1
 
-    score_matches = re.findall(r'SCORE:\s*(\d+)\s*/\s*10', reply, re.IGNORECASE)
+    # Detect score — support integers and decimals e.g. "8/10" or "8.5/10"
+    score_matches = re.findall(r'SCORE:\s*(\d+(?:\.\d+)?)\s*/\s*10', reply, re.IGNORECASE)
     if score_matches:
-        score = int(score_matches[0])
-        if 0 <= score <= 10:
-            st.session_state.score_sum += score
-            st.session_state.score_count += 1
-            st.session_state.session_results.append(score)
-            diff = st.session_state.applied_diff
-            st.session_state.diff_counts[diff] += 1
-            if st.session_state.session_active:
-                st.session_state.session_qs_done += 1
+        try:
+            score_f = float(score_matches[0])
+            score = int(round(score_f))
+            if 0 <= score_f <= 10:
+                st.session_state.score_sum += score_f
+                st.session_state.score_count += 1
+                st.session_state.session_results.append(score_f)
+                diff = st.session_state.applied_diff
+                st.session_state.diff_counts[diff] += 1
+                if st.session_state.session_active:
+                    done = st.session_state.session_qs_done + 1
+                    st.session_state.session_qs_done = done
+                    # Auto-send next question if session not complete
+                    if done < 5:
+                        qs = st.session_state.get("session_questions", [])
+                        if done < len(qs):
+                            next_q = qs[done]
+                            next_num = done + 1
+                            st.session_state.messages.append({
+                                "role": "user",
+                                "content": f"[SYSTEM: Now ask Question {next_num} of 5: \"{next_q}\". Just ask the question, do not give feedback again.]"
+                            })
+                            with st.spinner("Getting next question..."):
+                                r2 = client.messages.create(
+                                    model="claude-haiku-4-5-20251001",
+                                    max_tokens=400,
+                                    system=build_system_prompt("session"),
+                                    messages=st.session_state.messages
+                                )
+                                next_reply = r2.content[0].text
+                            st.session_state.messages.append({"role":"assistant","content":next_reply})
+        except:
+            pass
     st.rerun()
 
 def pick_question():
@@ -711,10 +741,16 @@ elif q2:
     st.session_state.session_active = True
     st.session_state.session_qs_done = 0
     st.session_state.session_results = []
+    st.session_state.session_questions = questions
     st.session_state.score_sum = 0
     st.session_state.score_count = 0
-    q_list = "\n".join([f"Q{i+1}: {q}" for i,q in enumerate(questions)])
-    send_message(f"Start a 5-question {st.session_state.applied_diff} {st.session_state.applied_topic} interview.\nUse these questions:\n{q_list}\nAsk Question 1 of 5 now.", "session")
+    q1_text = questions[0]
+    send_message(
+        f"You are running a 5-question interview session (Question 1 of 5).\n"
+        f"Ask ONLY this question now, then wait for the answer:\n\n\"{q1_text}\"\n\n"
+        f"Do NOT list other questions. Just ask this one and wait.",
+        "session"
+    )
 elif q3:
     send_message("Can you explain that in simpler terms with a concrete example?", "free")
 elif q4:
