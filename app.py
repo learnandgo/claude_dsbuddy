@@ -626,36 +626,51 @@ def build_system_prompt(mode="free"):
         "Senior": "Focus on system design, architectural decisions and depth."
     }[diff]
 
-    format_rules = (
-        "CRITICAL: When evaluating ANY answer on ANY topic at ANY difficulty level, "
-        "you MUST ALWAYS respond using EXACTLY this structure with EXACTLY these headings:\n\n"
-        "SCORE: X/10\n\n"
-        "WHAT YOU GOT RIGHT:\n"
-        "- point\n\n"
-        "WHAT WAS MISSING:\n"
-        "- point\n\n"
-        "MODEL ANSWER:\n"
-        "your answer here\n\n"
-        "Rules:\n"
-        "- SCORE must be on its own line, e.g. SCORE: 7/10 or SCORE: 7.5/10\n"
-        "- WHAT YOU GOT RIGHT: must appear exactly like that, followed by bullet points\n"
-        "- WHAT WAS MISSING: must appear exactly like that, followed by bullet points\n"
-        "- MODEL ANSWER: must appear exactly like that, followed by the answer text\n"
-        "- NEVER skip a section. NEVER rename a section. NEVER merge sections.\n"
-        "- This applies to ALL topics: Data Science, Data Analytics, Data Engineering, AI Engineering\n"
-        "- This applies at ALL difficulty levels: Beginner, Intermediate, Senior"
-    )
+    format_rules = """ABSOLUTE RULE — no exceptions, no freeform responses ever:
+
+Whenever the user responds to an interview question — whether with a real attempt OR any phrase
+meaning they don't know (such as: "i don't know", "idk", "no idea", "not sure", "skip", "pass",
+"next", "just tell me", "tell me", "show me", "give me the answer", "reveal", "i give up",
+"no clue", "beats me", "no answer", "move on", "what's the answer", "show answer", "no", "nothing",
+"blank", "can you explain", "can you tell me") — you MUST respond using EXACTLY these 4 sections:
+
+SCORE: X/10
+
+WHAT YOU GOT RIGHT:
+- point (use "- Nothing provided" if user gave no answer)
+
+WHAT WAS MISSING:
+- point
+
+MODEL ANSWER:
+Your full structured answer here
+
+FORMATTING RULES:
+- SCORE: write as "SCORE: 7/10" — use 0/10 when user gave no answer
+- WHAT YOU GOT RIGHT: exact heading, then bullet points starting with "- "
+- WHAT WAS MISSING: exact heading, then bullet points starting with "- "
+- MODEL ANSWER: exact heading, then a detailed well-structured answer using:
+    * Numbered steps (1. 2. 3.) for any process or sequence
+    * Bullet points (- ) for lists of concepts or features
+    * Sub-headings ending with colon (e.g. "Definition:" or "Example:") for distinct sub-topics
+    * **bold** around key terms
+    * `backticks` around code, commands, or technical names
+    * Minimum 6 lines — this is the user's learning moment, make it count
+- NEVER skip any section. NEVER rename any section. NEVER respond with plain text only.
+- These rules apply to ALL topics and ALL difficulty levels."""
 
     if mode == "session":
         mode_instr = (
             "You are running a 5-question interview session. "
-            "Ask the given question, wait for the answer, then give feedback using the format below. "
+            "Ask the given question, wait for the user's response (even if they say they don't know), "
+            "then ALWAYS give feedback using the 4-section format below. "
             "The next question follows after your feedback.\n\n" + format_rules
         )
     else:
         mode_instr = (
             "You are a professional interview coach. "
-            "When the user answers a question, give feedback using the format below.\n\n" + format_rules
+            "After the user responds to any question — including if they say they don't know — "
+            "ALWAYS give feedback using the 4-section format below.\n\n" + format_rules
         )
 
     return (
@@ -663,6 +678,7 @@ def build_system_prompt(mode="free"):
         "Topic: " + topic + " | Difficulty: " + diff + " — " + diff_guide + "\n\n"
         + mode_instr + "\n\nTone: professional, specific, encouraging."
     )
+
 
 
 GRADE_LABELS = {(0,3):"Needs work","(3,5)":"Developing","(5,7)":"Good","(7,9)":"Strong","(9,10)":"Excellent"}
