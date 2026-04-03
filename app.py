@@ -393,27 +393,27 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
 .msg-user { display:flex; justify-content:flex-end; margin-bottom:1.1rem; }
 .msg-assistant { display:flex; justify-content:flex-start; margin-bottom:1.1rem; }
 .bubble-user { background:#4f46e5; color:#fff; padding:.8rem 1rem; border-radius:16px 16px 4px 16px; max-width:70%; font-size:.88rem; line-height:1.6; white-space:pre-wrap; }
-.bubble-assistant { background:#f8fafc; border:1px solid #e2e8f0; color:#1e293b; padding:1rem 1.2rem; border-radius:16px 16px 16px 4px; max-width:82%; font-size:.88rem; line-height:1.7; }
+.bubble-assistant { background:#ffffff; border:1px solid #e2e8f0; color:#1e293b; padding:1rem 1.2rem; border-radius:16px 16px 16px 4px; max-width:82%; font-size:.88rem; line-height:1.7; }
 .bubble-label { font-size:.65rem; color:#94a3b8; margin-bottom:5px; font-weight:500; letter-spacing:.04em; text-transform:uppercase; }
-.fb-block { border-radius:10px; padding:.8rem .95rem; margin-top:.55rem; border-left:4px solid; }
-.fb-block.score { background:#eef2ff; border-color:#6366f1; }
-.fb-block.good { background:#f0fdf4; border-color:#22c55e; }
-.fb-block.missing { background:#fff7ed; border-color:#f97316; }
-.fb-block.model { background:#f0f9ff; border-color:#0ea5e9; }
-.fb-header { font-size:.68rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; margin-bottom:5px; display:flex; align-items:center; gap:5px; }
+.fb-block { border-radius:12px; padding:1rem 1.1rem; margin-top:.7rem; border-left:5px solid; }
+.fb-block.score { background:#eef2ff !important; border-color:#6366f1 !important; }
+.fb-block.good { background:#f0fdf4 !important; border-color:#22c55e !important; }
+.fb-block.missing { background:#fff7ed !important; border-color:#f97316 !important; }
+.fb-block.model { background:#f0f9ff !important; border-color:#0ea5e9 !important; }
+.fb-header { font-size:.75rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
 .fb-header.score { color:#4338ca; }
 .fb-header.good { color:#166534; }
 .fb-header.missing { color:#9a3412; }
 .fb-header.model { color:#0369a1; }
-.fb-score-value { font-size:2rem; font-weight:700; font-family:'DM Mono',monospace; color:#4338ca; line-height:1; }
-.fb-score-grade { font-size:.8rem; font-weight:600; margin-top:3px; }
-.score-bar-bg { background:#e0e7ff; border-radius:99px; height:7px; overflow:hidden; margin-top:7px; }
-.score-bar-fill { height:7px; border-radius:99px; }
-.fb-point { display:flex; gap:8px; align-items:flex-start; margin:5px 0; font-size:.85rem; }
-.fb-dot-good { color:#22c55e; font-size:.9rem; margin-top:2px; flex-shrink:0; }
-.fb-dot-miss { color:#f97316; font-size:.9rem; margin-top:2px; flex-shrink:0; }
-.fb-point-text { line-height:1.5; }
-.fb-model-text { font-size:.86rem; line-height:1.7; color:#0c4a6e; }
+.fb-score-value { font-size:2.4rem; font-weight:800; font-family:'DM Mono',monospace; color:#4338ca; line-height:1; }
+.fb-score-grade { font-size:.85rem; font-weight:700; margin-top:4px; }
+.score-bar-bg { background:#c7d2fe; border-radius:99px; height:8px; overflow:hidden; margin-top:8px; }
+.score-bar-fill { height:8px; border-radius:99px; }
+.fb-point { display:flex; gap:8px; align-items:flex-start; margin:6px 0; font-size:.87rem; }
+.fb-dot-good { color:#16a34a; font-size:1rem; margin-top:2px; flex-shrink:0; }
+.fb-dot-miss { color:#ea580c; font-size:1rem; margin-top:2px; flex-shrink:0; }
+.fb-point-text { line-height:1.55; }
+.fb-model-text { font-size:.87rem; line-height:1.75; color:#0c4a6e; }
 div.stButton > button { border-radius:10px; font-family:'DM Sans',sans-serif; font-weight:500; font-size:.86rem; padding:.48rem 1.1rem; transition:all .15s; width:100%; }
 div.stButton > button:first-child { background:#4f46e5; color:#fff; border:none; }
 div.stButton > button:first-child:hover { background:#4338ca; }
@@ -608,7 +608,10 @@ def format_response(text):
                         score_display_val, bw, bc, gl, gc = "?", 0, "#94a3b8", "", "#94a3b8"
                     html += f'''<div class="fb-block score">
 <div class="fb-header score">{icons["score"]} {lbls["score"]}</div>
-<div class="fb-score-value">{score_display_val}/10</div>
+<div style="display:flex;align-items:baseline;gap:8px">
+<div class="fb-score-value">{score_display_val}</div>
+<div style="font-size:1.1rem;font-weight:600;color:#6366f1;opacity:.6">/10</div>
+</div>
 <div class="fb-score-grade" style="color:{gc}">{gl}</div>
 <div class="score-bar-bg"><div class="score-bar-fill" style="width:{bw}%;background:{bc}"></div></div>
 <div>'''
