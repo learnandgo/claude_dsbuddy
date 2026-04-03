@@ -544,27 +544,54 @@ def badge(text, colors):
 st.markdown(badge(st.session_state.applied_topic, topic_colors[st.session_state.applied_topic]) + badge(st.session_state.applied_diff, diff_colors[st.session_state.applied_diff]), unsafe_allow_html=True)
 st.markdown("<div style='margin:.4rem 0'></div>", unsafe_allow_html=True)
 
+
 def build_system_prompt(mode="free"):
     topic = st.session_state.applied_topic
     diff = st.session_state.applied_diff
-    diff_guide = {"Beginner":"Focus on fundamental concepts and definitions.","Intermediate":"Focus on practical application and trade-offs.","Senior":"Focus on system design, architectural decisions and depth."}[diff]
-    fb = """SCORE: X/10
+    diff_guide = {
+        "Beginner": "Focus on fundamental concepts and definitions.",
+        "Intermediate": "Focus on practical application and trade-offs.",
+        "Senior": "Focus on system design, architectural decisions and depth."
+    }[diff]
 
-WHAT YOU GOT RIGHT:
-- point 1
-- point 2
+    format_rules = (
+        "CRITICAL: When evaluating ANY answer on ANY topic at ANY difficulty level, "
+        "you MUST ALWAYS respond using EXACTLY this structure with EXACTLY these headings:\n\n"
+        "SCORE: X/10\n\n"
+        "WHAT YOU GOT RIGHT:\n"
+        "- point\n\n"
+        "WHAT WAS MISSING:\n"
+        "- point\n\n"
+        "MODEL ANSWER:\n"
+        "your answer here\n\n"
+        "Rules:\n"
+        "- SCORE must be on its own line, e.g. SCORE: 7/10 or SCORE: 7.5/10\n"
+        "- WHAT YOU GOT RIGHT: must appear exactly like that, followed by bullet points\n"
+        "- WHAT WAS MISSING: must appear exactly like that, followed by bullet points\n"
+        "- MODEL ANSWER: must appear exactly like that, followed by the answer text\n"
+        "- NEVER skip a section. NEVER rename a section. NEVER merge sections.\n"
+        "- This applies to ALL topics: Data Science, Data Analytics, Data Engineering, AI Engineering\n"
+        "- This applies at ALL difficulty levels: Beginner, Intermediate, Senior"
+    )
 
-WHAT WAS MISSING:
-- point 1
-- point 2
-
-MODEL ANSWER:
-answer here"""
     if mode == "session":
-        mode_instr = "You are running a 5-question interview session. Questions are asked one by one. Ask the given question, wait for the answer, give structured feedback, then the next question follows. Use EXACTLY this feedback format:\n" + fb
+        mode_instr = (
+            "You are running a 5-question interview session. "
+            "Ask the given question, wait for the answer, then give feedback using the format below. "
+            "The next question follows after your feedback.\n\n" + format_rules
+        )
     else:
-        mode_instr = "Free chat. When asked for question, ask one and wait. When user answers, give feedback using EXACTLY:\n" + fb
-    return "You are DS Buddy, a professional interview coach.\nTopic: " + topic + " | Difficulty: " + diff + " — " + diff_guide + "\n" + mode_instr + "\nTone: professional, specific, encouraging."
+        mode_instr = (
+            "You are a professional interview coach. "
+            "When the user answers a question, give feedback using the format below.\n\n" + format_rules
+        )
+
+    return (
+        "You are DS Buddy, an expert interview coach for data professionals.\n"
+        "Topic: " + topic + " | Difficulty: " + diff + " — " + diff_guide + "\n\n"
+        + mode_instr + "\n\nTone: professional, specific, encouraging."
+    )
+
 
 GRADE_LABELS = {(0,3):"Needs work","(3,5)":"Developing","(5,7)":"Good","(7,9)":"Strong","(9,10)":"Excellent"}
 def grade_label(score):
