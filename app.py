@@ -94,6 +94,21 @@ QUESTION_BANK = {
             "How would you design a fraud detection system?",
             "What is causal inference and how does it differ from correlation?",
             "How would you reduce training time for a large deep learning model?",
+            "How would you build an end-to-end ML platform from scratch for a mid-sized company?",
+            "What strategies would you use to debug a model that suddenly degrades in production?",
+            "How do you approach versioning of datasets and models in a production ML system?",
+            "What is the difference between online learning and continual learning?",
+            "How would you design a real-time personalization engine?",
+            "Walk me through how you would conduct a post-mortem on a failed ML project.",
+            "What are the key tradeoffs when choosing between a custom model vs a pre-trained foundation model?",
+            "How would you design an experiment to measure the business impact of an ML model?",
+            "What is shadow deployment and when would you use it?",
+            "How do you handle data privacy and compliance in an ML pipeline?",
+            "Describe how you would structure an ML team and what roles are essential.",
+            "How would you approach building an anomaly detection system for time-series data?",
+            "What is the difference between explainability and interpretability in ML models?",
+            "How would you manage technical debt in a large ML codebase?",
+            "How do you decide when to retrain a model vs rebuild it from scratch?",
         ],
     },
     "Data Analytics": {
@@ -177,6 +192,21 @@ QUESTION_BANK = {
             "How would you approach defining success metrics for a new product feature?",
             "How do you ensure data governance across a large organization?",
             "How would you handle conflicting metrics between teams?",
+            "How would you redesign a broken data culture at an organisation?",
+            "What does it mean to be data-driven vs data-informed and why does the distinction matter?",
+            "How would you build trust in your data across a sceptical organisation?",
+            "Walk me through how you would run an analyst team embedded across multiple product squads.",
+            "How do you measure the ROI of an analytics team?",
+            "How would you approach building a company-wide OKR tracking system?",
+            "What is the role of analytics engineering and how does it differ from data analytics?",
+            "How would you design a customer segmentation framework for a subscription business?",
+            "How do you balance speed of insight delivery vs rigour of analysis?",
+            "Describe how you would approach a scenario where two analysts produce conflicting results.",
+            "How would you lead the rollout of a new BI tool across a 500-person company?",
+            "What frameworks do you use to translate ambiguous business questions into analytical problems?",
+            "How would you structure an analytics roadmap for a company that has never had an analytics team?",
+            "How do you ensure your analysis is reproducible and auditable?",
+            "What does a mature data culture look like and how do you build towards it?",
         ],
     },
     "Data Engineering": {
@@ -260,6 +290,21 @@ QUESTION_BANK = {
             "How would you reduce cloud costs for a large data platform?",
             "How do you ensure security and compliance in a data platform?",
             "How would you design a metadata management system?",
+            "How would you architect a data platform to support 50 data teams working independently?",
+            "What are the key differences between a data platform engineer and a data engineer?",
+            "How would you handle a situation where a critical pipeline silently produces wrong data for weeks?",
+            "How do you approach building SLAs and SLOs for data pipelines?",
+            "What is the difference between data contracts and schema registries?",
+            "How would you design a cost attribution system for a shared data platform?",
+            "Walk me through how you would evaluate and select a new data orchestration tool.",
+            "How do you manage breaking changes in shared data models across many downstream consumers?",
+            "What is your approach to building data platform documentation that teams actually use?",
+            "How would you design a self-service data platform that non-engineers can use?",
+            "How do you balance platform standardisation with team autonomy?",
+            "What strategies do you use to reduce pipeline failure blast radius?",
+            "How would you approach building observability into a large-scale data platform?",
+            "How do you handle regulatory requirements like data residency across a global platform?",
+            "Describe how you would lead a data platform migration with zero downtime.",
         ],
     },
     "AI Engineering": {
@@ -343,6 +388,21 @@ QUESTION_BANK = {
             "How would you handle sensitive data in an AI application?",
             "How do you approach AI red-teaming?",
             "What is the future of AI agents and what are the key engineering challenges?",
+            "How would you design a feedback loop to continuously improve an LLM application in production?",
+            "Walk me through how you would build an enterprise AI platform that multiple teams can use.",
+            "How do you measure and manage hallucination risk in a customer-facing AI product?",
+            "What is agentic AI and what new reliability challenges does it introduce?",
+            "How would you design a multi-agent system where agents collaborate to complete a task?",
+            "How do you approach cost optimisation for a product making millions of LLM calls per day?",
+            "What is the difference between retrieval-augmented generation and long context windows, and when would you choose each?",
+            "How would you design an AI system that needs to cite its sources reliably?",
+            "How do you handle versioning and rollback for prompt changes in a production system?",
+            "What governance processes would you put in place before launching an AI product to consumers?",
+            "How would you build a human-in-the-loop system for a high-stakes AI application?",
+            "What is model collapse and why does it matter for the future of LLM training?",
+            "How would you design an evaluation framework for a coding assistant used by 10,000 developers?",
+            "How do you balance AI capability improvements with safety and reliability in a fast-moving team?",
+            "Describe how you would architect an AI system that must operate in air-gapped or offline environments.",
         ],
     },
 }
@@ -363,7 +423,7 @@ defaults = {
     "input_key": 0,
     "diff_counts": {"Beginner": 0, "Intermediate": 0, "Senior": 0},
     "session_questions": [],
-    "used_questions": [],
+    "used_questions": {},  # keyed by "Topic|Difficulty"
 }
 for k, v in defaults.items():
     if k not in st.session_state:
@@ -454,8 +514,9 @@ with c3:
     apply = st.button("Apply ✓", use_container_width=True)
 
 if apply:
-    for k in ["messages","total_interactions","score_sum","score_count","session_qs_done","session_results","used_questions"]:
+    for k in ["messages","total_interactions","score_sum","score_count","session_qs_done","session_results"]:
         st.session_state[k] = [] if isinstance(defaults[k], list) else defaults[k]
+    st.session_state.used_questions = {}  # reset all cohort queues
     st.session_state.applied_topic = sel_topic
     st.session_state.applied_diff = sel_diff
     st.session_state.session_active = False
@@ -750,14 +811,21 @@ def send_message(text, mode="free"):
     st.rerun()
 
 def pick_question():
-    pool = QUESTION_BANK[st.session_state.applied_topic][st.session_state.applied_diff]
-    used = st.session_state.used_questions
-    available = [q for q in pool if q not in used]
-    if not available:
-        st.session_state.used_questions = []
-        available = pool
-    q = random.choice(available)
-    st.session_state.used_questions.append(q)
+    topic = st.session_state.applied_topic
+    diff = st.session_state.applied_diff
+    cohort_key = f"{topic}|{diff}"
+    pool = QUESTION_BANK[topic][diff]
+
+    # Per-cohort shuffle queue: exhaust all questions before repeating
+    queue = st.session_state.used_questions.get(cohort_key, [])
+    if not queue:
+        # Refill and shuffle the full pool for this cohort
+        queue = pool[:]
+        random.shuffle(queue)
+        st.session_state.used_questions[cohort_key] = queue
+
+    q = queue.pop(0)
+    st.session_state.used_questions[cohort_key] = queue
     return q
 
 if send and user_input.strip():
